@@ -1,5 +1,5 @@
 DROP DATABASE IF EXISTS Wonderboost;
-CREATE DATABASE Wonderboost;
+CREATE DATABASE IF NOT EXISTS Wonderboost;
 USE Wonderboost;
 
 -- Tabla para definir las secciones dentro de la aplicación
