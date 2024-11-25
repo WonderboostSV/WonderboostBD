@@ -170,6 +170,29 @@ CREATE TABLE datos_usuarios(
   cargo_actual VARCHAR(50) NULL
 );
 
+-- Tabla para manejar detalles específicos de distribuidores
+CREATE TABLE distribuidores (
+  id_distribuidor CHAR(36) NOT NULL PRIMARY KEY,
+  id_usuario CHAR(36) NOT NULL,
+  id_empresa CHAR(36) NOT NULL,
+  estado_distribuidor BOOLEAN DEFAULT 1, -- 1: Activo, 0: Inactivo
+  experiencia_años INT DEFAULT 0,
+  CONSTRAINT fk_distribuidor_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
+  CONSTRAINT fk_distribuidor_empresa FOREIGN KEY (id_empresa) REFERENCES empresas(id_empresa)
+);
+
+-- Tabla para manejar detalles específicos de repartidores
+CREATE TABLE repartidores (
+  id_repartidor CHAR(36) NOT NULL PRIMARY KEY,
+  id_usuario CHAR(36) NOT NULL,
+  licencia_conduccion VARCHAR(50) NOT NULL,
+  tipo_transporte ENUM('Moto', 'Bicicleta', 'Carro', 'Otro') NOT NULL,
+  estado_repartidor BOOLEAN DEFAULT 1, -- 1: Activo, 0: Inactivo
+  id_pais CHAR(36) NULL,
+  CONSTRAINT fk_repartidor_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
+  CONSTRAINT fk_repartidor_pais FOREIGN KEY (id_pais) REFERENCES paises(id_pais)
+);
+
 -- Tabla para solicitar el permiso de venta
 CREATE TABLE solicitudes_permisos_venta (
     id_solicitud CHAR(36) NOT NULL PRIMARY KEY,
@@ -296,7 +319,7 @@ CREATE TABLE detalles_servicio (
 -- Tabla para registrar los pedidos
 CREATE TABLE pedidos (
   id_pedido CHAR(36) NOT NULL PRIMARY KEY,
-  estado_pedido ENUM('Pendiente', 'Entregado', 'En camino', 'Cancelado', 'Negociando') DEFAULT 'Pendiente',
+  estado_pedido ENUM('Pendiente', 'Enviado', 'En camino', 'Cancelado', 'Negociando') DEFAULT 'Pendiente',
   fecha_pedido DATETIME DEFAULT CURRENT_TIMESTAMP,
   direccion_pedido VARCHAR(255) NOT NULL,
   id_cliente CHAR(36) NOT NULL,
@@ -316,6 +339,52 @@ CREATE TABLE detalles_pedidos (
   CONSTRAINT fk_detalle_pedido_pedido FOREIGN KEY (id_pedido) REFERENCES pedidos(id_pedido),
   CONSTRAINT fk_detalle_pedido_producto FOREIGN KEY (id_producto) REFERENCES productos(id_producto),
   CONSTRAINT fk_detalle_pedido_servicio FOREIGN KEY (id_servicio) REFERENCES servicios(id_servicio)
+);
+
+-- Tabla para registrar los envíos
+CREATE TABLE envios (
+  id_envio CHAR(36) NOT NULL PRIMARY KEY,
+  id_pedido CHAR(36) NOT NULL,
+  id_repartidor CHAR(36) NULL, -- Puede no tener repartidor asignado inicialmente
+  id_distribuidor CHAR(36) NULL, -- Puede involucrar a un distribuidor si aplica
+  estado_envio ENUM('Pendiente', 'En camino', 'Entregado', 'Cancelado') DEFAULT 'Pendiente',
+  fecha_envio DATETIME DEFAULT CURRENT_TIMESTAMP,
+  fecha_entrega DATETIME NULL,
+  direccion_envio VARCHAR(255) NOT NULL,
+  CONSTRAINT fk_envio_pedido FOREIGN KEY (id_pedido) REFERENCES pedidos(id_pedido),
+  CONSTRAINT fk_envio_repartidor FOREIGN KEY (id_repartidor) REFERENCES repartidores(id_repartidor),
+  CONSTRAINT fk_envio_distribuidor FOREIGN KEY (id_distribuidor) REFERENCES distribuidores(id_distribuidor)
+);
+
+-- Tabla para registrar el seguimiento de envíos
+CREATE TABLE seguimiento_envios (
+  id_seguimiento CHAR(36) NOT NULL PRIMARY KEY,
+  id_envio CHAR(36) NOT NULL,
+  estado_actual ENUM('Preparando', 'En tránsito', 'En entrega', 'Entregado') NOT NULL,
+  descripcion_estado TEXT NULL,
+  fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_seguimiento_envio FOREIGN KEY (id_envio) REFERENCES envios(id_envio)
+);
+
+-- Tabla para registrar los pagos
+CREATE TABLE pagos (
+  id_pago CHAR(36) NOT NULL PRIMARY KEY,
+  id_pedido CHAR(36) NOT NULL,
+  metodo_pago ENUM('Efectivo', 'Tarjeta', 'Transferencia', 'Otro') NOT NULL,
+  estado_pago ENUM('Pendiente', 'Pagado', 'Rechazado') DEFAULT 'Pendiente',
+  monto_pago DECIMAL(10, 2) NOT NULL,
+  fecha_pago DATETIME NULL,
+  CONSTRAINT fk_pago_pedido FOREIGN KEY (id_pedido) REFERENCES pedidos(id_pedido)
+);
+
+-- Tabla para seguimiento de pagos
+CREATE TABLE seguimiento_pagos (
+  id_seguimiento_pago CHAR(36) NOT NULL PRIMARY KEY,
+  id_pago CHAR(36) NOT NULL,
+  estado_pago ENUM('En proceso', 'Completado', 'Fallido', 'Reembolsado') NOT NULL,
+  fecha_actualizacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+  observaciones TEXT NULL,
+  CONSTRAINT fk_seguimiento_pago FOREIGN KEY (id_pago) REFERENCES pagos(id_pago)
 );
 
 -- Tabla para registrar favoritos de usuarios (aplica tanto a productos como servicios)
@@ -356,3 +425,4 @@ CREATE TABLE comentarios (
   CONSTRAINT fk_comentario_producto FOREIGN KEY (id_producto) REFERENCES productos(id_producto),
   CONSTRAINT fk_comentario_servicio FOREIGN KEY (id_servicio) REFERENCES servicios(id_servicio)
 );
+
