@@ -170,3 +170,189 @@ CREATE TABLE datos_usuarios(
   cargo_actual VARCHAR(50) NULL
 );
 
+-- Tabla para solicitar el permiso de venta
+CREATE TABLE solicitudes_permisos_venta (
+    id_solicitud CHAR(36) NOT NULL PRIMARY KEY,
+    id_usuario CHAR(36) NOT NULL,
+    id_empresa CHAR(36) NOT NULL,
+    fecha_solicitud DATETIME DEFAULT CURRENT_TIMESTAMP,
+    estado_solicitud ENUM('Pendiente', 'Aprobado', 'Rechazado') DEFAULT 'Pendiente',
+    observaciones TEXT NULL,
+    CONSTRAINT fk_solicitud_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
+    CONSTRAINT fk_solicitud_empresa FOREIGN KEY (id_empresa) REFERENCES empresas(id_empresa)
+);
+
+-- Tabla principal para las categorias
+CREATE TABLE categorias (
+  id_categoria CHAR(36) NOT NULL PRIMARY KEY,
+  nombre_categoria VARCHAR(100) NOT NULL,
+  descripcion_categoria TEXT NULL,
+  CONSTRAINT uq_nombre_categoria_unico UNIQUE(nombre_categoria)
+);
+
+-- Tabla principal para las subcategorias
+CREATE TABLE subcategorias (
+  id_subcategoria CHAR(36) NOT NULL PRIMARY KEY,
+  nombre_subcategoria VARCHAR(100) NOT NULL,
+  id_categoria CHAR(36) NOT NULL,
+  descripcion_subcategoria TEXT NULL,
+  CONSTRAINT fk_subcategoria_categoria FOREIGN KEY (id_categoria) REFERENCES categorias(id_categoria),
+  CONSTRAINT uq_nombre_subcategoria_unico UNIQUE(nombre_subcategoria)
+);
+
+-- Tabla principal para los filtros de las subcategorias
+CREATE TABLE filtros (
+  id_filtro CHAR(36) NOT NULL PRIMARY KEY,
+  nombre_filtro VARCHAR(100) NOT NULL, -- Ejemplo: "Color", "Tamaño", "Material"
+  tipo_filtro ENUM('Texto', 'Numérico', 'Lista') NOT NULL, -- Tipo de filtro (texto, numérico o lista)
+  id_subcategoria CHAR(36) NOT NULL,
+  CONSTRAINT fk_filtro_subcategoria FOREIGN KEY (id_subcategoria) REFERENCES subcategorias(id_subcategoria)
+);
+
+-- Tabla para las opciones de los filtros de las subcategorias
+CREATE TABLE opciones_filtro (
+  id_opcion_filtro CHAR(36) NOT NULL PRIMARY KEY,
+  valor_opcion_filtro VARCHAR(100) NOT NULL, -- Ejemplo: "Rojo", "Azul", "S/M", etc.
+  id_filtro CHAR(36) NOT NULL,
+  CONSTRAINT fk_opcion_filtro FOREIGN KEY (id_filtro) REFERENCES filtros(id_filtro)
+);
+
+-- Tabla principal para los productos
+CREATE TABLE productos (
+  id_producto CHAR(36) NOT NULL PRIMARY KEY,
+  nombre_producto VARCHAR(100) NOT NULL,
+  descripcion_producto TEXT NOT NULL,
+  precio_producto DECIMAL(10, 2) UNSIGNED NOT NULL,
+  tipo_precio_producto ENUM('Fijo', 'Negociable') DEFAULT 'Fijo',
+  estado_producto BOOLEAN DEFAULT 1,
+  id_subcategoria CHAR(36) NOT NULL, -- Relación con la subcategoría
+  id_empresa CHAR(36) NOT NULL, -- Relación con el emprendimiento al que pertenece el producto
+  CONSTRAINT fk_producto_subcategoria FOREIGN KEY (id_subcategoria) REFERENCES subcategorias(id_subcategoria),
+  CONSTRAINT fk_producto_empresa FOREIGN KEY (id_empresa) REFERENCES empresas(id_empresa)
+);
+
+-- Tabla para relacionar los filtros con los productos
+CREATE TABLE producto_filtro (
+  id_producto CHAR(36) NOT NULL,
+  id_filtro CHAR(36) NOT NULL,
+  valor_filtro VARCHAR(100) NOT NULL, -- El valor asociado al filtro
+  PRIMARY KEY (id_producto, id_filtro),
+  CONSTRAINT fk_producto_filtro FOREIGN KEY (id_producto) REFERENCES productos(id_producto),
+  CONSTRAINT fk_filtro_producto FOREIGN KEY (id_filtro) REFERENCES filtros(id_filtro)
+);
+
+-- Tabla para los detalles de productos
+CREATE TABLE detalles_producto (
+  id_detalle_producto CHAR(36) NOT NULL PRIMARY KEY,
+  id_producto CHAR(36) NOT NULL,
+  foto_producto VARCHAR(50) NULL,
+  id_opcion_filtro CHAR(36) NOT NULL, -- Relacionado con las opciones de filtro (por ejemplo, un color o talla específica)
+  valor_detalle_producto VARCHAR(100) NOT NULL, -- El valor de la opción (por ejemplo, "Rojo", "M", etc.)
+  cantidad_disponible INT UNSIGNED NOT NULL, -- Cuántas unidades de esta opción hay disponibles
+  CONSTRAINT fk_detalle_producto FOREIGN KEY (id_producto) REFERENCES productos(id_producto),
+  CONSTRAINT fk_detalle_opcion_filtro FOREIGN KEY (id_opcion_filtro) REFERENCES opciones_filtro(id_opcion_filtro)
+);
+
+-- Tabla para los tipos de servicio
+CREATE TABLE tipos_servicios (
+  id_tipo_servicio CHAR(36) NOT NULL PRIMARY KEY,
+  nombre_tipo_servicio VARCHAR(100) NOT NULL,
+  descripcion_tipo_servicio TEXT NULL,
+  CONSTRAINT uq_nombre_tipo_servicio UNIQUE(nombre_tipo_servicio)
+);
+
+-- Tabla para registrar los servicios
+CREATE TABLE servicios (
+  id_servicio CHAR(36) NOT NULL PRIMARY KEY,
+  nombre_servicio VARCHAR(100) NOT NULL,
+  descripcion_servicio TEXT NOT NULL,
+  id_tipo_servicio CHAR(36) NOT NULL, -- Relación con el tipo de servicio
+  id_empresa CHAR(36) NOT NULL, -- Relación con la empresa que ofrece el servicio
+  estado_servicio BOOLEAN DEFAULT 1, -- 1: Activo, 0: Inactivo
+  fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_servicio_tipo_servicio FOREIGN KEY (id_tipo_servicio) REFERENCES tipos_servicios(id_tipo_servicio),
+  CONSTRAINT fk_servicio_empresa FOREIGN KEY (id_empresa) REFERENCES empresas(id_empresa)
+);
+
+-- Tabla para manejar precios de los servicios
+CREATE TABLE precios_servicio (
+  id_precio_servicio CHAR(36) NOT NULL PRIMARY KEY,
+  id_servicio CHAR(36) NOT NULL, -- Relación con el servicio
+  modalidad_precio ENUM('Por hora', 'Por sesión', 'Mensual', 'Anual') NOT NULL,
+  tipo_precio_servicio ENUM('Fijo', 'Negociable') DEFAULT 'Fijo',
+  precio_servicio DECIMAL(10, 2) UNSIGNED NOT NULL,
+  CONSTRAINT fk_precio_servicio FOREIGN KEY (id_servicio) REFERENCES servicios(id_servicio)
+);
+
+-- Tabla para almacenar detalles adicionales del servicio
+CREATE TABLE detalles_servicio (
+  id_detalle_servicio CHAR(36) NOT NULL PRIMARY KEY,
+  id_servicio CHAR(36) NOT NULL, -- Relación con el servicio
+  nombre_atributo VARCHAR(100) NOT NULL, -- Ejemplo: "Duración", "Incluye materiales"
+  valor_atributo VARCHAR(255) NOT NULL,
+  CONSTRAINT fk_detalle_servicio FOREIGN KEY (id_servicio) REFERENCES servicios(id_servicio)
+);
+
+-- Tabla para registrar los pedidos
+CREATE TABLE pedidos (
+  id_pedido CHAR(36) NOT NULL PRIMARY KEY,
+  estado_pedido ENUM('Pendiente', 'Entregado', 'En camino', 'Cancelado', 'Negociando') DEFAULT 'Pendiente',
+  fecha_pedido DATETIME DEFAULT CURRENT_TIMESTAMP,
+  direccion_pedido VARCHAR(255) NOT NULL,
+  id_cliente CHAR(36) NOT NULL,
+  CONSTRAINT fk_cliente_pedido FOREIGN KEY (id_cliente) REFERENCES usuarios(id_usuario)
+);
+
+-- Tabla para los detalles de los pedidos (aplica tanto a productos como servicios)
+CREATE TABLE detalles_pedidos (
+  id_detalle_pedido CHAR(36) NOT NULL PRIMARY KEY,
+  id_pedido CHAR(36) NOT NULL,
+  id_producto CHAR(36),
+  id_servicio CHAR(36),
+  cantidad INT NOT NULL,
+  precio_unitario DECIMAL(10, 2) NOT NULL,
+  CONSTRAINT chk_precio_unitario_positive CHECK (precio_unitario > 0),
+  CONSTRAINT chk_cantidad_positive CHECK (cantidad > 0),
+  CONSTRAINT fk_detalle_pedido_pedido FOREIGN KEY (id_pedido) REFERENCES pedidos(id_pedido),
+  CONSTRAINT fk_detalle_pedido_producto FOREIGN KEY (id_producto) REFERENCES productos(id_producto),
+  CONSTRAINT fk_detalle_pedido_servicio FOREIGN KEY (id_servicio) REFERENCES servicios(id_servicio)
+);
+
+-- Tabla para registrar favoritos de usuarios (aplica tanto a productos como servicios)
+CREATE TABLE favoritos (
+  id_favorito CHAR(36) NOT NULL PRIMARY KEY,
+  id_usuario CHAR(36) NOT NULL,
+  id_producto CHAR(36),
+  id_servicio CHAR(36),
+  fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_favorito_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
+  CONSTRAINT fk_favorito_producto FOREIGN KEY (id_producto) REFERENCES productos(id_producto),
+  CONSTRAINT fk_favorito_servicio FOREIGN KEY (id_servicio) REFERENCES servicios(id_servicio)
+);
+
+-- Tabla para registrar likes/dislikes (aplica tanto a productos como servicios)
+CREATE TABLE valoraciones (
+  id_valoracion CHAR(36) NOT NULL PRIMARY KEY,
+  id_usuario CHAR(36) NOT NULL,
+  id_producto CHAR(36),
+  id_servicio CHAR(36),
+  es_like BOOLEAN NOT NULL,
+  fecha_valoracion DATETIME DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_valoracion_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
+  CONSTRAINT fk_valoracion_producto FOREIGN KEY (id_producto) REFERENCES productos(id_producto),
+  CONSTRAINT fk_valoracion_servicio FOREIGN KEY (id_servicio) REFERENCES servicios(id_servicio)
+);
+
+-- Tabla para registrar comentarios (aplica tanto a productos como servicios)
+CREATE TABLE comentarios (
+  id_comentario CHAR(36) NOT NULL PRIMARY KEY,
+  id_usuario CHAR(36) NOT NULL,
+  id_producto CHAR(36),
+  id_servicio CHAR(36),
+  comentario TEXT NOT NULL,
+  fecha_comentario DATETIME DEFAULT CURRENT_TIMESTAMP,
+  estado_comentario BOOLEAN DEFAULT 1, -- 1: Visible, 0: Oculto
+  CONSTRAINT fk_comentario_usuario FOREIGN KEY (id_usuario) REFERENCES usuarios(id_usuario),
+  CONSTRAINT fk_comentario_producto FOREIGN KEY (id_producto) REFERENCES productos(id_producto),
+  CONSTRAINT fk_comentario_servicio FOREIGN KEY (id_servicio) REFERENCES servicios(id_servicio)
+);
