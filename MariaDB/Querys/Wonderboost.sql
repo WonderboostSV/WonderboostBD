@@ -173,7 +173,7 @@ CREATE TABLE
 		CONSTRAINT fk_id_usuario_datos FOREIGN KEY (id_usuario) REFERENCES usuarios (id_usuario) ON DELETE CASCADE ON UPDATE CASCADE,
 		nombre_usuario VARCHAR(50) NULL,
 		apellido_usuario VARCHAR(50) NULL,
-		telefono_usuario VARCHAR(15) NOT NULL,
+		telefono_usuario VARCHAR(15) NULL,
 		telefono_alternativo VARCHAR(15) NULL,
 		genero_usuario ENUM ('Masculino', 'Femenino', 'Otro'),
 		fecha_nacimiento_usuario DATE NULL,
