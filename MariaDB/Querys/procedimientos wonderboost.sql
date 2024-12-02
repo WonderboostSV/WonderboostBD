@@ -1,41 +1,27 @@
 USE Wonderboost;
 
-DROP PROCEDURE IF EXISTS autenticar_usuario;
+DROP PROCEDURE IF EXISTS autenticar_administrador;
 DELIMITER $$
-CREATE PROCEDURE autenticar_usuario(
-    IN p_username VARCHAR(255),
-    OUT p_id CHAR(36),
-    OUT p_alias VARCHAR(255),
-    OUT p_correo VARCHAR(255),
-    OUT p_nombreCompleto VARCHAR(255),
-    OUT p_clave VARCHAR(255),
-    OUT p_foto VARCHAR(255),
-    OUT p_estado VARCHAR(255),
-    OUT p_apellido VARCHAR(255),
-    OUT p_intentos INT,
-    OUT p_dias INT,
-    OUT p_tiempo DATETIME,
-    OUT p_bloqueo DATETIME
+CREATE PROCEDURE autenticar_administrador(
+    IN p_username VARCHAR(255)
 )
 BEGIN
     SELECT 
-        a.id_administrador,
-        a.alias_administrador,
-        a.correo_administrador,
-        CONCAT(d.nombre_administrador, ' ', d.apellido_administrador) AS nombre_completo,
-        a.clave_administrador,
-        d.foto_administrador,
+        a.id_administrador AS ID,
+        a.alias_administrador AS ALIAS,
+        a.correo_administrador AS CORREO,
+        CONCAT(d.nombre_administrador, ' ', d.apellido_administrador) AS NOMBRECOMPLETO,
+        a.clave_administrador AS CLAVE,
+        d.foto_administrador AS FOTO,
         CASE 
             WHEN a.estado_administrador = 1 THEN 'Activo'
             WHEN a.estado_administrador = 0 THEN 'Bloqueado'
-        END AS estado,
-        d.apellido_administrador,
-        a.intentos_administrador,
-        DATEDIFF(CURRENT_DATE, a.fecha_clave) AS dias_desde_ultima_clave,
-        a.tiempo_intento,
-        a.fecha_bloqueo
-    INTO 
-        p_id, p_alias, p_correo, p_nombreCompleto, p_clave, p_foto, p_estado, p_apellido, p_intentos, p_dias, p_tiempo, p_bloqueo
+        END AS ESTADO,
+        d.apellido_administrador AS APELLIDO,
+        a.intentos_administrador AS INTENTOS,
+        DATEDIFF(CURRENT_DATE, a.fecha_clave) AS DIAS,
+        a.tiempo_intento AS TIEMPO,
+        a.fecha_bloqueo AS BLOQUEO
     FROM 
         administradores AS a
     LEFT JOIN 
