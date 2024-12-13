@@ -575,3 +575,125 @@ BEGIN
 END;
 $$
 DELIMITER ;
+
+-- Datos de administradores
+DROP PROCEDURE IF EXISTS insertar_dato_administrador;
+DELIMITER $$
+CREATE PROCEDURE insertar_dato_administrador(
+    IN p_nombre_administrador VARCHAR(50),
+    IN p_apellido_administrador VARCHAR(50),
+    IN p_telefono_administrador VARCHAR(15),
+    IN p_dui_administrador VARCHAR(10),
+    IN p_direccion_administrador VARCHAR(200),
+    IN p_id_administrador CHAR(36),
+    IN p_fecha_nacimiento_administrador DATE,
+    IN p_foto_administrador VARCHAR(50)
+)
+BEGIN
+    DECLARE dui_count INT;
+    DECLARE admin_exists INT;
+
+    -- Validar si el DUI ya existe
+    SELECT COUNT(*) INTO dui_count
+    FROM datos_administradores
+    WHERE dui_administrador = p_dui_administrador;
+
+    -- Validar si el administrador existe
+    SELECT COUNT(*) INTO admin_exists
+    FROM administradores
+    WHERE id_administrador = p_id_administrador;
+
+    IF dui_count > 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El DUI del administrador ya existe';
+    ELSEIF admin_exists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El administrador no existe';
+    ELSE
+        -- Insertar el dato del administrador
+        INSERT INTO datos_administradores (
+            id_dato_administrador, nombre_administrador, apellido_administrador,
+            telefono_administrador, dui_administrador, direccion_administrador,
+            id_administrador, fecha_nacimiento_administrador, foto_administrador
+        )
+        VALUES (
+            UUID(), p_nombre_administrador, p_apellido_administrador,
+            p_telefono_administrador, p_dui_administrador, p_direccion_administrador,
+            p_id_administrador, p_fecha_nacimiento_administrador, p_foto_administrador
+        );
+    END IF;
+END;
+$$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS actualizar_dato_administrador;
+DELIMITER $$
+CREATE PROCEDURE actualizar_dato_administrador(
+    IN p_id_dato_administrador CHAR(36),
+    IN p_nombre_administrador VARCHAR(50),
+    IN p_apellido_administrador VARCHAR(50),
+    IN p_telefono_administrador VARCHAR(15),
+    IN p_dui_administrador VARCHAR(10),
+    IN p_direccion_administrador VARCHAR(200),
+    IN p_fecha_nacimiento_administrador DATE,
+    IN p_foto_administrador VARCHAR(50)
+)
+BEGIN
+    DECLARE dato_exists INT;
+    DECLARE dui_count INT;
+
+    -- Validar si el registro existe
+    SELECT COUNT(*) INTO dato_exists
+    FROM datos_administradores
+    WHERE id_dato_administrador = p_id_dato_administrador;
+
+    -- Validar si el DUI ya existe para otro registro
+    SELECT COUNT(*) INTO dui_count
+    FROM datos_administradores
+    WHERE dui_administrador = p_dui_administrador
+    AND id_dato_administrador <> p_id_dato_administrador;
+
+    IF dato_exists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El registro no existe';
+    ELSEIF dui_count > 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El DUI del administrador ya está en uso';
+    ELSE
+        -- Actualizar el dato del administrador
+        UPDATE datos_administradores
+        SET 
+            nombre_administrador = p_nombre_administrador,
+            apellido_administrador = p_apellido_administrador,
+            telefono_administrador = p_telefono_administrador,
+            dui_administrador = p_dui_administrador,
+            direccion_administrador = p_direccion_administrador,
+            fecha_nacimiento_administrador = p_fecha_nacimiento_administrador,
+            foto_administrador = p_foto_administrador
+        WHERE id_dato_administrador = p_id_dato_administrador;
+    END IF;
+END;
+$$
+DELIMITER ;
+
+DROP PROCEDURE IF EXISTS eliminar_dato_administrador;
+DELIMITER $$
+CREATE PROCEDURE eliminar_dato_administrador(
+    IN p_id_dato_administrador CHAR(36)
+)
+BEGIN
+    DECLARE dato_exists INT;
+
+    -- Validar si el registro existe
+    SELECT COUNT(*) INTO dato_exists
+    FROM datos_administradores
+    WHERE id_dato_administrador = p_id_dato_administrador;
+
+    IF dato_exists = 0 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El registro no existe';
+    ELSE
+        -- Eliminar el dato del administrador
+        DELETE FROM datos_administradores
+        WHERE id_dato_administrador = p_id_dato_administrador;
+    END IF;
+END;
+$$
+DELIMITER ;
+
+
