@@ -345,7 +345,7 @@ DELIMITER ;
 DROP PROCEDURE IF EXISTS insertar_administrador;
 DELIMITER $$
 CREATE PROCEDURE insertar_administrador(
-    IN p_correo_administrador VARCHAR(50),
+    IN p_correo_administrador VARCHAR(100),
     IN p_clave_administrador VARCHAR(255),
     IN p_alias_administrador VARCHAR(25),
     IN p_id_rol_administrador CHAR(36)
@@ -381,7 +381,7 @@ DROP PROCEDURE IF EXISTS actualizar_administrador;
 DELIMITER $$
 CREATE PROCEDURE actualizar_administrador(
     IN p_id_administrador CHAR(36),
-    IN p_correo_administrador VARCHAR(50),
+    IN p_correo_administrador VARCHAR(100),
     IN p_clave_administrador VARCHAR(255),
     IN p_alias_administrador VARCHAR(25),
     IN p_id_rol_administrador CHAR(36)

@@ -35,7 +35,7 @@ CREATE TABLE
 CREATE TABLE
 	administradores (
 		id_administrador CHAR(36) NOT NULL PRIMARY KEY,
-		correo_administrador VARCHAR(50) NOT NULL,
+		correo_administrador VARCHAR(100) NOT NULL,
 		CONSTRAINT uq_correo_administrador_unico UNIQUE (correo_administrador),
 		CONSTRAINT chk_correo_administrador_formato CHECK (
 			correo_administrador REGEXP '^[A-Za-z0-9._%-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,4}$'
