@@ -52,6 +52,10 @@ CREATE TABLE
 		fecha_bloqueo DATETIME NULL
 	);
 
+USE wonderboost;
+SELECT * FROM roles_administradores;
+
+
 -- Tabla para los datos personales del administrador
 CREATE TABLE
 	datos_administradores (

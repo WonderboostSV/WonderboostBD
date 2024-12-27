@@ -1,5 +1,10 @@
 USE Wonderboost;
 
+CREATE VIEW vista_tabla_roles_administradores AS
+SELECT id_rol_administrador AS ID,
+rol_administrador AS ROL
+FROM roles_administradores;
+
 CREATE VIEW vista_tabla_administradores AS
 SELECT 
     da.id_dato_administrador AS ID_DATO,
@@ -27,3 +32,5 @@ JOIN
     datos_administradores da ON a.id_administrador = da.id_administrador
 JOIN 
     roles_administradores ra ON a.id_rol_administrador = ra.id_rol_administrador;
+    
+SELECT * FROM vista_tabla_administradores;

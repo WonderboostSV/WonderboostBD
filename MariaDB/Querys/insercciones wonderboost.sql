@@ -42,3 +42,5 @@ INSERT INTO permisos_roles (id_permiso_rol, id_rol_administrador, id_seccion) VA
 (UUID(), 
 (SELECT id_rol_administrador FROM roles_administradores WHERE rol_administrador = 'Root'), 
 (SELECT id_seccion FROM secciones_sistema WHERE nombre_seccion = 'Gestión de repartidores'));
+
+

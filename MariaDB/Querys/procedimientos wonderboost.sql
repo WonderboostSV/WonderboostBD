@@ -500,6 +500,36 @@ END;
 $$
 DELIMITER ;
 
+DROP PROCEDURE IF EXISTS cambiar_estado_a_bloqueado;
+DELIMITER $$
+
+CREATE PROCEDURE cambiar_estado_a_bloqueado(
+    IN p_alias_administrador VARCHAR(25)
+)
+BEGIN
+    DECLARE alias_exists INT;
+
+    -- Validar si el alias existe
+    SELECT COUNT(*) INTO alias_exists
+    FROM administradores
+    WHERE alias_administrador = p_alias_administrador;
+
+    IF alias_exists = 0 THEN
+        -- Enviar un error si el alias no existe
+        SIGNAL SQLSTATE '45000' 
+        SET MESSAGE_TEXT = 'El alias no existe';
+    ELSE
+        -- Actualizar estado_administrador a 0 y fecha_bloqueo a la fecha y hora actuales
+        UPDATE administradores
+        SET estado_administrador = 0,
+            fecha_bloqueo = NOW()
+        WHERE alias_administrador = p_alias_administrador;
+    END IF;
+END;
+$$
+
+DELIMITER ;
+
 DROP PROCEDURE IF EXISTS reiniciar_intentos;
 DELIMITER $$
 CREATE PROCEDURE reiniciar_intentos(
